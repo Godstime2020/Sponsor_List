@@ -1,0 +1,52 @@
+<tr
+  id="sponsor-row-{{ sponsor.id }}"
+  class="{% if entry and entry.is_blacklisted %}row-blacklisted{% endif %}"
+>
+  <td class="cell-org">
+    <a href="{% url 'sponsor_detail' sponsor.pk %}">{{ sponsor.organisation_name }}</a>
+  </td>
+  <td>{{ sponsor.town_city|default:"—" }}</td>
+  <td>{{ sponsor.region_label }}</td>
+  <td class="muted">{{ sponsor.type_rating|default:"—" }}</td>
+  <td class="muted">{{ sponsor.route|default:"—" }}</td>
+  <td class="flags">
+    {% if entry %}
+      {% if entry.is_blacklisted %}<span class="pill bad">Blacklist</span>{% endif %}
+      {% if entry.have_tried %}<span class="pill ok">Tried</span>{% endif %}
+      {% if entry.has_any_notes %}<span class="pill note">Notes</span>{% endif %}
+    {% else %}
+      <span class="muted">—</span>
+    {% endif %}
+  </td>
+  <td class="actions">
+    <form
+      method="post"
+      action="{% url 'toggle_blacklist' sponsor.pk %}"
+      class="inline-form"
+      hx-post="{% url 'toggle_blacklist' sponsor.pk %}"
+      hx-target="#sponsor-row-{{ sponsor.id }}"
+      hx-swap="outerHTML"
+    >
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+      <button type="submit" class="btn sm {% if entry and entry.is_blacklisted %}active{% endif %}" title="Toggle blacklist">
+        Block
+      </button>
+    </form>
+    <form
+      method="post"
+      action="{% url 'toggle_tried' sponsor.pk %}"
+      class="inline-form"
+      hx-post="{% url 'toggle_tried' sponsor.pk %}"
+      hx-target="#sponsor-row-{{ sponsor.id }}"
+      hx-swap="outerHTML"
+    >
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+      <button type="submit" class="btn sm {% if entry and entry.have_tried %}active{% endif %}" title="Toggle tried">
+        Tried
+      </button>
+    </form>
+    <a class="btn sm ghost" href="{% url 'sponsor_detail' sponsor.pk %}">Edit</a>
+  </td>
+</tr>

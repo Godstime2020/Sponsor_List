@@ -1,0 +1,60 @@
+{% extends "companies/base.html" %}
+{% block title %}{{ sponsor.organisation_name }} — Sponsor tracker{% endblock %}
+{% block content %}
+  <article class="detail">
+    <header class="detail-head">
+      <p class="crumb"><a href="{% url 'dashboard' %}">Dashboard</a></p>
+      <h1>{{ sponsor.organisation_name }}</h1>
+      <dl class="meta-grid">
+        <div>
+          <dt>Town / city</dt>
+          <dd>{{ sponsor.town_city|default:"—" }}</dd>
+        </div>
+        <div>
+          <dt>Region (county)</dt>
+          <dd>{{ sponsor.region_label }}</dd>
+        </div>
+        <div>
+          <dt>Type &amp; rating</dt>
+          <dd>{{ sponsor.type_rating|default:"—" }}</dd>
+        </div>
+        <div>
+          <dt>Route</dt>
+          <dd>{{ sponsor.route|default:"—" }}</dd>
+        </div>
+      </dl>
+    </header>
+
+    <section class="panel">
+      <h2>Your tracking</h2>
+      <form method="post" action="" class="stack-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <ul class="errorlist">{{ form.non_field_errors }}</ul>
+        {% endif %}
+        <div class="checks">
+          <label class="check">{{ form.is_blacklisted }} Blacklist (hide from shortlists)</label>
+          <label class="check">{{ form.have_tried }} I have tried / contacted this sponsor</label>
+        </div>
+        <label class="field">
+          <span class="label">What you know</span>
+          {{ form.what_i_know }}
+          <span class="help">Contacts, reputation, interview experience, red flags, etc.</span>
+        </label>
+        <label class="field">
+          <span class="label">What they do</span>
+          {{ form.what_they_do }}
+          <span class="help">Sector, products, services, hiring focus.</span>
+        </label>
+        <label class="field">
+          <span class="label">Other notes</span>
+          {{ form.extra_notes }}
+        </label>
+        <button type="submit" class="btn primary">Save</button>
+      </form>
+      {% if entry.tried_at %}
+        <p class="muted">Marked tried on {{ entry.tried_at|date:"j M Y, H:i" }}.</p>
+      {% endif %}
+    </section>
+  </article>
+{% endblock %}

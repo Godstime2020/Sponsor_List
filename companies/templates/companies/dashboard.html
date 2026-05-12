@@ -1,0 +1,100 @@
+{% extends "companies/base.html" %}
+{% load humanize %}
+{% block title %}Dashboard — Sponsor tracker{% endblock %}
+{% block content %}
+  <div class="dashboard">
+    <aside class="sidebar">
+      <h2>Regions</h2>
+      <p class="hint">Filter by county from the register.</p>
+      <ul class="region-list">
+        {% for rh in region_hrefs %}
+          <li>
+            <a href="{{ rh.url }}" class="{% if rh.active %}active{% endif %}">{{ rh.label }}</a>
+            <span class="badge">{{ rh.count|intcomma }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </aside>
+
+    <div class="main-col">
+      <section class="stats">
+        <div class="stat">
+          <span class="stat-label">Register</span>
+          <span class="stat-value">{{ total_sponsors|intcomma }}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Your blacklist</span>
+          <span class="stat-value">{{ stats.blacklisted|intcomma }}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Marked tried</span>
+          <span class="stat-value">{{ stats.tried|intcomma }}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">With notes</span>
+          <span class="stat-value">{{ stats.with_notes|intcomma }}</span>
+        </div>
+      </section>
+
+      <section class="filters">
+        <form class="filter-form" method="get" action="">
+          {% if region %}<input type="hidden" name="region" value="{{ region }}" />{% endif %}
+          <input type="hidden" name="tab" value="{{ tab }}" />
+          <label class="grow">
+            <span class="sr-only">Search</span>
+            <input
+              type="search"
+              name="q"
+              value="{{ q }}"
+              placeholder="Search organisation, town, county…"
+              class="input-search"
+            />
+          </label>
+          <button type="submit" class="btn primary">Search</button>
+        </form>
+
+        <nav class="tabs" aria-label="List filter">
+          <a href="{{ tab_hrefs.all }}" class="{% if tab == 'all' %}active{% endif %}">All</a>
+          <a href="{{ tab_hrefs.blacklisted }}" class="{% if tab == 'blacklisted' %}active{% endif %}">Blacklist</a>
+          <a href="{{ tab_hrefs.tried }}" class="{% if tab == 'tried' %}active{% endif %}">Tried</a>
+          <a href="{{ tab_hrefs.saved }}" class="{% if tab == 'saved' %}active{% endif %}">Has notes</a>
+        </nav>
+      </section>
+
+      <nav class="pager pager--top" aria-label="Pages">
+        {% if page_prev %}
+          <a class="btn" href="{{ page_prev }}">Previous</a>
+        {% else %}
+          <span class="btn disabled">Previous</span>
+        {% endif %}
+        <span class="page-meta">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_next %}
+          <a class="btn" href="{{ page_next }}">Next</a>
+        {% else %}
+          <span class="btn disabled">Next</span>
+        {% endif %}
+      </nav>
+
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Organisation</th>
+              <th>Town / city</th>
+              <th>Region</th>
+              <th>Type</th>
+              <th>Route</th>
+              <th>Your flags</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sponsor, entry in rows %}
+              {% include "companies/partials/sponsor_row.html" with sponsor=sponsor entry=entry only %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

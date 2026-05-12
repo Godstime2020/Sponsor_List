@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sponsored employers — Worker &amp; Temporary Worker</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <h1>Sponsored employers</h1>
+        <p class="lede">
+          Local list from the published register (SQLite built from the source spreadsheet). Search and
+          filter in the browser.
+        </p>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="controls" aria-label="Search and filters">
+        <div class="control-row">
+          <label class="field">
+            <span class="label">Search</span>
+            <input
+              type="search"
+              id="q"
+              name="q"
+              placeholder="Organisation, town, or county"
+              autocomplete="off"
+            />
+          </label>
+          <label class="field">
+            <span class="label">Type &amp; rating</span>
+            <select id="typeRating" name="typeRating">
+              <option value="">Any</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="label">Route</span>
+            <select id="route" name="route">
+              <option value="">Any</option>
+            </select>
+          </label>
+        </div>
+        <div class="meta-row">
+          <p id="status" class="status" role="status">Loading database…</p>
+          <label class="field inline">
+            <span class="label">Rows per page</span>
+            <select id="pageSize" name="pageSize">
+              <option value="25">25</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <div id="error" class="error hidden" role="alert"></div>
+
+      <nav class="pager pager--top" aria-label="Pagination">
+        <button type="button" id="prev" class="btn" disabled>Previous</button>
+        <span id="pageInfo" class="page-info"></span>
+        <button type="button" id="next" class="btn" disabled>next</button>
+      </nav>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Organisation</th>
+              <th scope="col">Town / city</th>
+              <th scope="col">County</th>
+              <th scope="col">Type &amp; rating</th>
+              <th scope="col">Route</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        Data file: <code>sponsors.db</code> (generated from
+        <code>Companies_With_COS.xlsx</code>). Serve this folder over HTTP so the
+        app can load the database (for example <code>python3 -m http.server 8080</code> from the
+        <code>public</code> directory).
+      </p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
+    <script src="app.js" type="module"></script>
+  </body>
+</html>
