@@ -9,3 +9,8 @@ db.sqlite3
 
 # Optional local output of scripts/build_preseed_sqlite.sh (image build uses Dockerfile instead)
 docker/preseed.sqlite3
+
+# Exported Docker image / release bundles (docker save, linux tarballs — too large for GitHub)
+sponsor-list-docker-image.tar.gz
+sponsor-list-docker-image.tar
+sponsor-tracker-linux-amd64.tar.gz
