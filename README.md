@@ -36,7 +36,7 @@ The admin site is **limited to sponsors** (no Users / Groups / per-user note mod
 
 1. Sign in at `/admin/`
 2. **Sponsors** — changelist (search/filter) and **change** form: **organisation, town, county** are read-only; **type &amp; rating** and **route** are editable.
-3. **Sync from Excel** — **Sponsors** → *Sync from Excel*, or `/admin/companies/sponsor/sync-xlsx/` — upload `.xlsx`; the server runs the diff (add new rows, update rows that match org/town/county; it does **not** remove rows that exist only in the DB).
+3. **Sync from Excel** — **Sponsors** → *Sync from Excel*, or `/admin/companies/sponsor/sync-xlsx/` — upload `.xlsx`; the server runs the diff (add new rows,update rows that match org/town/county; it does **not** remove rows that exist only in the DB).
 
 New sponsor rows are added **only** via Excel sync (or `import_sponsors` / Docker pre-seed); the admin **Add** control is disabled.
 
