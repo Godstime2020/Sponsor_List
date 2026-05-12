@@ -1,0 +1,32 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% block title %}Sync sponsor register · {{ block.super }}{% endblock %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; <a href="{% url 'admin:companies_sponsor_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+  &rsaquo; {% trans "Sync from Excel" %}
+</div>
+{% endblock %}
+{% block content %}
+<h1>Sync sponsor register from Excel</h1>
+<p>
+  Upload a <strong>.xlsx</strong> file in the same shape as the published register (first sheet, columns:
+  Organisation Name, Town/City, County, Type &amp; Rating, Route). The server will compare each row to the
+  database: identical rows are skipped; rows that match an existing organisation + town + county but differ
+  elsewhere are <strong>updated</strong>; entirely new rows are <strong>added</strong>. Rows only in the database
+  are not removed.
+</p>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="form-row">
+    <label for="id_xlsx"><strong>Excel file</strong></label><br />
+    <input id="id_xlsx" type="file" name="xlsx" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required />
+  </div>
+  <p class="submit-row" style="margin-top: 1rem">
+    <input type="submit" class="default" value="Run diff and apply" />
+    <a href="{% url 'admin:companies_sponsor_changelist' %}" class="button" style="margin-left: 0.5rem">Cancel</a>
+  </p>
+</form>
+{% endblock %}

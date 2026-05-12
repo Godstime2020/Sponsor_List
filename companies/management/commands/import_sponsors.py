@@ -29,6 +29,12 @@ class Command(BaseCommand):
             self.stderr.write(self.style.ERROR(f"Missing file: {path}"))
             return
 
+        self.stdout.write(
+            "Reading spreadsheet (large xlsx can take several minutes before the first "
+            '"Imported …" line; CPU should stay busy)…'
+        )
+        self.stdout.flush()
+
         clear: bool = options["clear"]
         limit: int | None = options["limit"]
 

@@ -7,11 +7,14 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-change-in-production-
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
 
-ALLOWED_HOSTS: list[str] = [
+# Public hostnames from env; loopback always allowed for same-host curl / health checks / Docker bridge.
+_env_hosts = [
     h.strip()
     for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
     if h.strip()
 ]
+_local_hosts = ["127.0.0.1", "localhost", "[::1]"]
+ALLOWED_HOSTS: list[str] = list(dict.fromkeys(_local_hosts + _env_hosts))
 
 INSTALLED_APPS = [
     "django.contrib.admin",

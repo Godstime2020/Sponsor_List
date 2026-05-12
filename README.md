@@ -7,6 +7,7 @@ Django app to browse the UK **Worker & Temporary Worker** sponsor register with 
 - **Dashboard**: search, region filter, tabs (all / blacklisted / tried / has notes), pagination
 - **Per-sponsor page**: notes fields and flags
 - **Auth**: sign up, sign in, sign out
+- **Django admin** (`/admin/`): superuser can **sync sponsors from Excel** (diff: add new rows, update changed fields for same org/town/county; no deletes)
 - **Optional static site**: `public/index.html` + `sql.js` + `public/sponsors.db` (serve over HTTP only; `file://` blocks `fetch`)
 
 ## Requirements
@@ -28,6 +29,15 @@ python manage.py runserver
 ```
 
 Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) (redirects to the dashboard when signed in).
+
+### Admin: sync register from Excel (superuser)
+
+1. Create a superuser: `python manage.py createsuperuser`
+2. Sign in at `/admin/`
+3. Open **Sponsors** → **“Sync from Excel”** (or go directly to `/admin/companies/sponsor/sync-xlsx/`)
+4. Upload an `.xlsx` in the same column layout as the published register (see `xlsx_utils.iter_sponsor_records`)
+
+The job compares each row to the database: **identical** five-field rows are skipped; same **organisation + town + county** with other field changes are **updated**; otherwise rows are **inserted**. Rows only in the database are **not** removed. Very large uploads may exceed the web server timeout—use `import_sponsors` from the shell for huge one-off loads.
 
 ### Load sponsor rows from the spreadsheet
 
@@ -67,13 +77,44 @@ Then open [http://127.0.0.1:8080/](http://127.0.0.1:8080/).
 
 ## Docker
 
+The **Dockerfile** is multi-stage: it runs **`migrate`** + **`import_sponsors`** during **`docker build`**, using `Companies_With_COS.xlsx` in the build context. The resulting SQLite is copied into the final image as **`/app/preseed.sqlite3`**.
+
+On **first container start**, if `DATABASE_PATH` points to a **missing or empty** file (typical new volume), **`docker-entrypoint.sh`** copies that pre-seed into place, then runs **`migrate`** (for any newer migrations), then Gunicorn.
+
 Build and run with Compose (persists SQLite under a Docker volume at `/data`):
 
 ```bash
 docker compose up --build
 ```
 
-Set secrets and hosts via environment variables or a `.env` file next to `docker-compose.yml` (see `.env.example`). The container runs migrations on start, then Gunicorn on port **8000**.
+**Requirements:** `Companies_With_COS.xlsx` must be present in the project directory when you build (it is not excluded by `.dockerignore`). The first image build can take **a long time** while the sheet is imported.
+
+Set secrets and hosts via environment variables or a `.env` file next to `docker-compose.yml` (see `.env.example`). Gunicorn listens on port **8000**.
+
+To **re-seed from a new image** after you already used the volume, remove the old volume (this deletes DB + user data): `docker compose down -v` then `up` again.
+
+### Pre-seed SQLite without Docker (optional)
+
+To produce a standalone DB file (e.g. to inspect or copy manually):
+
+```bash
+chmod +x scripts/build_preseed_sqlite.sh
+./scripts/build_preseed_sqlite.sh
+# writes docker/preseed.sqlite3 by default; or: ./scripts/build_preseed_sqlite.sh /path/to/out.sqlite3
+```
+
+### Building for EC2 (avoid “exec format error”)
+
+Typical EC2 instances are **linux/amd64**. If you build the image on an **Apple Silicon Mac**, the default image is often **linux/arm64**. That image will fail on EC2 with `exec format error` and a platform mismatch warning.
+
+Build explicitly for AMD64, then save and copy to the server:
+
+```bash
+docker build --platform linux/amd64 -t sponsor-list:latest .
+docker save sponsor-list:latest | gzip -9 > sponsor-list-docker-image.tar.gz
+```
+
+The first AMD64 build from an ARM Mac can be slow (QEMU emulation). After `docker load` on EC2, run the container again; the platform warning should be gone.
 
 ## Environment variables
 
@@ -93,7 +134,8 @@ Set secrets and hosts via environment variables or a `.env` file next to `docker
 | `config/` | Django settings and URL config |
 | `public/` | Standalone HTML/JS/CSS + `sponsors.db` for the browser viewer |
 | `scripts/build_db.py` | Builds `public/sponsors.db` from the XLSX |
-| `Dockerfile` / `docker-compose.yml` | Production-style container |
+| `scripts/build_preseed_sqlite.sh` | Builds a Django SQLite DB with sponsors (optional; Docker also pre-seeds at build) |
+| `Dockerfile` / `docker-compose.yml` | Multi-stage image with baked-in sponsor data for empty volumes |
 
 ## Repository
 

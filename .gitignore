@@ -6,3 +6,6 @@ db.sqlite3
 *.sqlite3-journal
 .env
 .DS_Store
+
+# Optional local output of scripts/build_preseed_sqlite.sh (image build uses Dockerfile instead)
+docker/preseed.sqlite3
