@@ -1,9 +1,45 @@
 {% extends "companies/base.html" %}
 {% load humanize %}
 {% block title %}Dashboard — Sponsor tracker{% endblock %}
+{% block topbar_nav %}
+  <div class="topbar-actions">
+    <nav class="topnav topnav--desktop" aria-label="Account">
+      <span class="who">{{ user.username }}</span>
+      <form method="post" action="{% url 'logout' %}" class="logout-form">
+        {% csrf_token %}
+        <button type="submit" class="link-button">Sign out</button>
+      </form>
+    </nav>
+    <details class="site-menu site-menu--mobile">
+      <summary class="hamburger-btn">
+        <span class="sr-only">Menu: regions and account</span>
+        <span class="hamburger-icon" aria-hidden="true"></span>
+      </summary>
+      <div class="menu-panel" role="navigation" aria-label="Regions and account">
+        <p class="menu-user"><span class="who">{{ user.username }}</span></p>
+        <h2 class="menu-heading">Regions</h2>
+        <p class="hint menu-hint">Filter by county from the register.</p>
+        <ul class="region-list region-list--menu">
+          {% for rh in region_hrefs %}
+            <li>
+              <a href="{{ rh.url }}" class="{% if rh.active %}active{% endif %}">{{ rh.label }}</a>
+              <span class="badge">{{ rh.count|intcomma }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+        <div class="menu-footer">
+          <form method="post" action="{% url 'logout' %}" class="logout-form menu-logout-form">
+            {% csrf_token %}
+            <button type="submit" class="btn menu-signout">Sign out</button>
+          </form>
+        </div>
+      </div>
+    </details>
+  </div>
+{% endblock %}
 {% block content %}
   <div class="dashboard">
-    <aside class="sidebar">
+    <aside class="sidebar sidebar--dashboard-desktop" aria-label="Regions">
       <h2>Regions</h2>
       <p class="hint">Filter by county from the register.</p>
       <ul class="region-list">
@@ -17,7 +53,7 @@
     </aside>
 
     <div class="main-col">
-      <section class="stats">
+      <section class="stats stats-slab">
         <div class="stat">
           <span class="stat-label">Register</span>
           <span class="stat-value">{{ total_sponsors|intcomma }}</span>
@@ -37,64 +73,103 @@
       </section>
 
       <section class="filters">
-        <form class="filter-form" method="get" action="">
-          {% if region %}<input type="hidden" name="region" value="{{ region }}" />{% endif %}
+        <form class="filters-unified" method="get" action="{% url 'dashboard' %}">
           <input type="hidden" name="tab" value="{{ tab }}" />
-          <label class="grow">
-            <span class="sr-only">Search</span>
-            <input
-              type="search"
-              name="q"
-              value="{{ q }}"
-              placeholder="Search organisation, town, county…"
-              class="input-search"
-            />
-          </label>
-          <button type="submit" class="btn primary">Search</button>
-        </form>
+          {% if region %}<input type="hidden" name="region" value="{{ region }}" />{% endif %}
+          <div class="filter-form">
+            <label class="grow">
+              <span class="sr-only">Search</span>
+              <input
+                id="dashboard-q"
+                type="search"
+                name="q"
+                value="{{ q }}"
+                placeholder="Search organisation, town, county…"
+                class="input-search"
+                autocomplete="off"
+                data-clear-url="{{ clear_filters_href }}"
+              />
+            </label>
+            <button type="submit" class="btn primary">Search</button>
+          </div>
 
-        <nav class="tabs" aria-label="List filter">
-          <a href="{{ tab_hrefs.all }}" class="{% if tab == 'all' %}active{% endif %}">All</a>
-          <a href="{{ tab_hrefs.blacklisted }}" class="{% if tab == 'blacklisted' %}active{% endif %}">Blacklist</a>
-          <a href="{{ tab_hrefs.tried }}" class="{% if tab == 'tried' %}active{% endif %}">Tried</a>
-          <a href="{{ tab_hrefs.saved }}" class="{% if tab == 'saved' %}active{% endif %}">Has notes</a>
-        </nav>
+          <nav class="tabs" aria-label="List filter">
+            <button type="submit" name="tab" value="all" class="{% if tab == 'all' %}active{% endif %}">All</button>
+            <button type="submit" name="tab" value="blacklisted" class="{% if tab == 'blacklisted' %}active{% endif %}">
+              Blacklist
+            </button>
+            <button type="submit" name="tab" value="tried" class="{% if tab == 'tried' %}active{% endif %}">Tried</button>
+            <button type="submit" name="tab" value="saved" class="{% if tab == 'saved' %}active{% endif %}">Has notes</button>
+          </nav>
+
+          <div class="page-size-form">
+            <label class="page-size-label">
+              <span class="page-size-text">Rows per page</span>
+              <select name="per_page" class="page-size-select" aria-label="Rows per page" onchange="this.form.submit()">
+                {% for n in per_page_choices %}
+                  <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          </div>
+        </form>
       </section>
 
+      {% if not list_is_empty %}
       <nav class="pager pager--top" aria-label="Pages">
         {% if page_prev %}
           <a class="btn" href="{{ page_prev }}">Previous</a>
         {% else %}
           <span class="btn disabled">Previous</span>
         {% endif %}
-        <span class="page-meta">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        <span class="page-meta">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} · {{ per_page }} per page</span>
         {% if page_next %}
           <a class="btn" href="{{ page_next }}">Next</a>
         {% else %}
           <span class="btn disabled">Next</span>
         {% endif %}
       </nav>
+      {% endif %}
 
-      <div class="table-card">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Organisation</th>
-              <th>Town / city</th>
-              <th>Region</th>
-              <th>Type</th>
-              <th>Route</th>
-              <th>Your flags</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for sponsor, entry in rows %}
-              {% include "companies/partials/sponsor_row.html" with sponsor=sponsor entry=entry only %}
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+      {% if list_is_empty %}
+        <div class="table-card table-card--empty" role="status">
+          <div class="empty-list">
+            <p class="empty-list-msg">company not found in this list</p>
+            <a class="btn primary empty-list-action" href="{{ clear_filters_href }}">Clear filters</a>
+          </div>
+        </div>
+      {% else %}
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Organisation</th>
+                <th>Town / city</th>
+                <th>Region</th>
+                <th>Type</th>
+                <th>Route</th>
+                <th>Your flags</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sponsor, entry in rows %}
+                {% include "companies/partials/sponsor_row.html" with sponsor=sponsor entry=entry only %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
     </div>
   </div>
+  <script>
+    (function () {
+      var el = document.getElementById("dashboard-q");
+      if (!el) return;
+      el.addEventListener("search", function () {
+        if (this.value !== "") return;
+        var u = this.getAttribute("data-clear-url");
+        if (u) window.location.assign(u);
+      });
+    })();
+  </script>
 {% endblock %}

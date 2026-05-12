@@ -4,10 +4,10 @@ Django app to browse the UK **Worker & Temporary Worker** sponsor register with 
 
 ## Features
 
-- **Dashboard**: search, region filter, tabs (all / blacklisted / tried / has notes), pagination
+- **Dashboard**: search, region filter, tabs (all / blacklisted / tried / has notes), **server-side** pagination with **editable rows per page** (25 / 50 / 100 via `per_page` query param)
 - **Per-sponsor page**: notes fields and flags
 - **Auth**: sign up, sign in, sign out
-- **Django admin** (`/admin/`): superuser can **sync sponsors from Excel** (diff: add new rows, update changed fields for same org/town/county; no deletes)
+- **Django admin** (`/admin/`): **staff-only**, **Sponsors only** — browse the register, edit **Type &amp; rating** and **Route** (organisation / town / county are read-only), **Sync from Excel** (diff then insert/update; no row deletes from admin, no add-row button)
 - **Optional static site**: `public/index.html` + `sql.js` + `public/sponsors.db` (serve over HTTP only; `file://` blocks `fetch`)
 
 ## Requirements
@@ -30,14 +30,17 @@ python manage.py runserver
 
 Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) (redirects to the dashboard when signed in).
 
-### Admin: sync register from Excel (superuser)
+### Admin: sponsor register (staff)
 
-1. Create a superuser: `python manage.py createsuperuser`
-2. Sign in at `/admin/`
-3. Open **Sponsors** → **“Sync from Excel”** (or go directly to `/admin/companies/sponsor/sync-xlsx/`)
-4. Upload an `.xlsx` in the same column layout as the published register (see `xlsx_utils.iter_sponsor_records`)
+The admin site is **limited to sponsors** (no Users / Groups / per-user note models). Use **`createsuperuser`** or set `is_staff=True` in the shell for accounts that may sign in here.
 
-The job compares each row to the database: **identical** five-field rows are skipped; same **organisation + town + county** with other field changes are **updated**; otherwise rows are **inserted**. Rows only in the database are **not** removed. Very large uploads may exceed the web server timeout—use `import_sponsors` from the shell for huge one-off loads.
+1. Sign in at `/admin/`
+2. **Sponsors** — changelist (search/filter) and **change** form: **organisation, town, county** are read-only; **type &amp; rating** and **route** are editable.
+3. **Sync from Excel** — **Sponsors** → *Sync from Excel*, or `/admin/companies/sponsor/sync-xlsx/` — upload `.xlsx`; the server runs the diff (add new rows, update rows that match org/town/county; it does **not** remove rows that exist only in the DB).
+
+New sponsor rows are added **only** via Excel sync (or `import_sponsors` / Docker pre-seed); the admin **Add** control is disabled.
+
+Very large uploads may hit the web server timeout — use `import_sponsors` from the shell for huge one-off loads.
 
 ### Load sponsor rows from the spreadsheet
 

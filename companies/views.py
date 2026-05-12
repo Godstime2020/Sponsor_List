@@ -16,6 +16,16 @@ from django.views.decorators.http import require_http_methods, require_POST
 from .forms import UserSponsorEntryForm
 from .models import Sponsor, UserSponsorEntry
 
+PER_PAGE_CHOICES = (10, 25, 50, 100)
+
+
+def _per_page(request) -> int:
+    try:
+        n = int(request.GET.get("per_page", "25"))
+    except (TypeError, ValueError):
+        return 25
+    return n if n in PER_PAGE_CHOICES else 25
+
 
 def build_qs(request, **overrides: Any) -> str:
     p = request.GET.copy()
@@ -28,11 +38,17 @@ def build_qs(request, **overrides: Any) -> str:
     return urlencode({k: v for k, v in p.items() if str(v) != ""})
 
 
+def _encode_get(qd) -> str:
+    """URL-encode GET params, omitting empty strings (same rule as build_qs)."""
+    return urlencode({k: v for k, v in qd.items() if str(v) != ""})
+
+
 def page_href(request, page_num: int) -> str:
     """Absolute path so pagination works from any URL shape."""
     qd = request.GET.copy()
     qd["page"] = str(page_num)
-    return f"{reverse('dashboard')}?{qd.urlencode()}"
+    qs = _encode_get(qd)
+    return f"{reverse('dashboard')}?{qs}" if qs else reverse("dashboard")
 
 
 def _htmx(request) -> bool:
@@ -62,17 +78,20 @@ def dashboard(request):
 
     sponsors = Sponsor.objects.all()
 
-    if region == "__UNKNOWN__":
-        sponsors = sponsors.filter(county="")
-    elif region:
-        sponsors = sponsors.filter(county=region)
+    # "All" tab: search + region narrow the register. Other tabs use the full register
+    # as the pool, then only the tab rule (blacklist / tried / notes) applies.
+    if tab == "all":
+        if region == "__UNKNOWN__":
+            sponsors = sponsors.filter(county="")
+        elif region:
+            sponsors = sponsors.filter(county=region)
 
-    if q:
-        sponsors = sponsors.filter(
-            Q(organisation_name__icontains=q)
-            | Q(town_city__icontains=q)
-            | Q(county__icontains=q)
-        )
+        if q:
+            sponsors = sponsors.filter(
+                Q(organisation_name__icontains=q)
+                | Q(town_city__icontains=q)
+                | Q(county__icontains=q)
+            )
 
     if tab == "blacklisted":
         sponsors = sponsors.filter(
@@ -96,7 +115,8 @@ def dashboard(request):
 
     sponsors = sponsors.order_by("organisation_name")
 
-    paginator = Paginator(sponsors, 25)
+    per_page = _per_page(request)
+    paginator = Paginator(sponsors, per_page)
     page_obj = paginator.get_page(request.GET.get("page"))
 
     ids = [s.id for s in page_obj.object_list]
@@ -128,7 +148,7 @@ def dashboard(request):
         .count(),
     }
 
-    all_regions_qs = build_qs(request, region=None)
+    all_regions_qs = build_qs(request, q=None, region=None, tab="all")
     region_hrefs = [
         {
             "label": "All regions",
@@ -138,7 +158,7 @@ def dashboard(request):
         }
     ]
     for r in region_list:
-        qs_s = build_qs(request, region=r["key"])
+        qs_s = build_qs(request, q=None, tab="all", region=r["key"])
         region_hrefs.append(
             {
                 "label": r["label"],
@@ -147,11 +167,6 @@ def dashboard(request):
                 "active": region == r["key"],
             }
         )
-
-    tab_hrefs = {
-        name: ("?" + build_qs(request, tab=name)) if build_qs(request, tab=name) else "?"
-        for name in ("all", "blacklisted", "tried", "saved")
-    }
 
     page_prev = (
         page_href(request, page_obj.previous_page_number())
@@ -162,18 +177,26 @@ def dashboard(request):
         page_href(request, page_obj.next_page_number()) if page_obj.has_next() else None
     )
 
+    clear_qs = build_qs(request, q=None, region=None, tab="all")
+    clear_filters_href = (
+        f"{reverse('dashboard')}?{clear_qs}" if clear_qs else reverse("dashboard")
+    )
+
     ctx = {
         "rows": rows,
         "page_obj": page_obj,
+        "per_page": per_page,
+        "per_page_choices": PER_PAGE_CHOICES,
         "q": q,
         "region": region,
         "tab": tab,
         "region_hrefs": region_hrefs,
-        "tab_hrefs": tab_hrefs,
         "page_prev": page_prev,
         "page_next": page_next,
         "stats": stats,
         "total_sponsors": Sponsor.objects.count(),
+        "clear_filters_href": clear_filters_href,
+        "list_is_empty": page_obj.paginator.count == 0,
     }
     return render(request, "companies/dashboard.html", ctx)
 

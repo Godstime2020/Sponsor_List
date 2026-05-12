@@ -2,7 +2,7 @@
 {% load i18n %}
 {% block object-tools-items %}
   {{ block.super }}
-  {% if user.is_superuser %}
+  {% if user.is_staff %}
     <li>
       <a href="{% url 'admin:companies_sponsor_sync_xlsx' %}" class="addlink">{% trans "Sync from Excel" %}</a>
     </li>

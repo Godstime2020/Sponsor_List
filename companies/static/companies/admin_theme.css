@@ -1,0 +1,154 @@
+/* Sponsor tracker admin — white & blue, always light (no dark toggle). */
+
+html {
+  color-scheme: light !important;
+}
+
+.theme-toggle {
+  display: none !important;
+}
+
+html[data-theme="dark"],
+html[data-theme="light"],
+html[data-theme="auto"],
+:root {
+  --primary: #64b5f6;
+  --secondary: #0d47a1;
+  --accent: #ffe082;
+  --primary-fg: #ffffff;
+
+  --body-fg: #102a43;
+  --body-bg: #f5f9fc;
+  --body-quiet-color: #516679;
+  --body-medium-color: #243b53;
+  --body-loud-color: #061a2e;
+
+  --header-color: #ffffff;
+  --header-branding-color: #ffffff;
+  --header-bg: #0d47a1;
+  --header-link-color: #e3f2fd;
+
+  --breadcrumbs-fg: #e3f2fd;
+  --breadcrumbs-link-fg: #ffffff;
+  --breadcrumbs-bg: #1565c0;
+
+  --link-fg: #0b57d0;
+  --link-hover-color: #063d94;
+  --link-selected-fg: #0d47a1;
+
+  --hairline-color: #d7e6f5;
+  --border-color: #b8d4eb;
+
+  --error-fg: #c62828;
+
+  --message-success-bg: #e8f5e9;
+  --message-warning-bg: #fff8e1;
+  --message-error-bg: #ffebee;
+
+  --darkened-bg: #e8f1fc;
+  --selected-bg: #dbeafe;
+  --selected-row: #bbdefb;
+
+  --button-fg: #ffffff;
+  --button-bg: #1565c0;
+  --button-hover-bg: #0d47a1;
+  --default-button-bg: #0b57d0;
+  --default-button-hover-bg: #0842a0;
+  --close-button-bg: #5c7a94;
+  --close-button-hover-bg: #3d5a73;
+  --delete-button-bg: #c62828;
+  --delete-button-hover-bg: #9a1e1e;
+
+  --object-tools-fg: #ffffff;
+  --object-tools-bg: #0b57d0;
+  --object-tools-hover-bg: #0842a0;
+}
+
+#header {
+  background: linear-gradient(135deg, #0a3d7a 0%, #1565c0 45%, #1976d2 100%);
+  border-bottom: 1px solid #0a3d7a;
+}
+
+#site-name a:link,
+#site-name a:visited {
+  color: #ffffff !important;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+#site-name a:focus,
+#site-name a:hover {
+  color: #bbdefb !important;
+}
+
+#user-tools,
+#user-tools a:link,
+#user-tools a:visited,
+#user-tools button {
+  color: #e3f2fd !important;
+}
+
+#user-tools a:focus,
+#user-tools a:hover,
+#user-tools button:hover {
+  color: #ffffff !important;
+}
+
+#logout-form button {
+  color: #e3f2fd !important;
+}
+
+.module h2,
+.module caption,
+.inline-group h2 {
+  background: #e3f2fd;
+  color: #0d47a1;
+  border-bottom: 1px solid #90caf9;
+}
+
+.module,
+.dashboard .module {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+}
+
+#content {
+  background: var(--body-bg);
+}
+
+#content-main {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+
+#footer {
+  background: var(--body-bg);
+  color: var(--body-quiet-color);
+}
+
+.quiet {
+  color: var(--body-quiet-color);
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="url"],
+input[type="number"],
+textarea,
+select {
+  background: #ffffff;
+  border-color: var(--border-color);
+  color: var(--body-fg);
+}
+
+.submit-row {
+  background: #e8f1fc;
+  border-top: 1px solid var(--border-color);
+}
+
+.object-tools a {
+  border-radius: 6px;
+}
